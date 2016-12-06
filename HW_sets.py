@@ -156,7 +156,7 @@ def find_inter(set_1, set_2, set_3, set_4):
         f.close()
 
 def find_difference(set_1, set_2, set_3, set_4):
-    difference = set_1 ^ set_2 ^ set_3 ^ set_4
+    difference = ((set_1 ^ set_2) ^ set_3) ^ set_4
     f = open('results.txt', 'a', encoding='utf-8')
     f.write('Симметрическая разность:' + '\n')
     for word in sorted(difference):
