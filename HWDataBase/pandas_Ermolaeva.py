@@ -33,7 +33,7 @@ def insert_ino_table_1(words):
     with open('pandas_sql.txt', 'a', encoding='utf-8') as f:
         f.write('Таблица №1' + '\n')
         for i in range(0, len(words)):
-            f.write('INSERT INTO Pandas (id, token, left_punct, right_punct, token_id, sent_num) VALUES' + '(' + str(i+1) + ', ' + words[i] + ', ' + '"' + left[i] + '"' + ', ' + '"' + right[i] + '"' + ', ' + '0' + ', ' + str(i+1) + ');' + '\n')
+            f.write('INSERT INTO Pandas (id, token, left_punct, right_punct, token_id, sent_num) VALUES (' + str(i+1) + ', \'' + words[i] + '\', \'' + left[i] + '\', \'' + right[i] + '\', ' + '0' + ', ' + str(i+1) + ');' + '\n')
 
 def mystem():
     inp = '/Users/nata/Desktop/'
@@ -67,7 +67,7 @@ def insert_into_table_2(tokens, lemmas):
     with open('pandas_sql.txt', 'a', encoding='utf-8') as f:
         f.write('Таблица №2' + '\n')  
         for i in range(0, len(tokens)):
-            f.write('INSERT INTO LPandas (id, token, lemma) VALUES' + '(' + str(i+1) + ', '  + tokens[i] + ', ' + lemmas[i] + ');' + '\n')
+            f.write('INSERT INTO TokensPandas (id, token, lemma) VALUES (' + str(i+1) + ', \''  + tokens[i] + '\', \'' + lemmas[i] + '\');' + '\n')
 
 def main():
     read = open_file()
