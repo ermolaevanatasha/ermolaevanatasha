@@ -1,6 +1,10 @@
 import flask
 import telebot
 import conf
+import string
+import re
+
+regex = re.compile('[%s]' % re.escape(string.punctuation))
 
 WEBHOOK_URL_BASE = "https://{}".format(conf.WEBHOOK_HOST)
 WEBHOOK_URL_PATH = "/{}".format(conf.TOKEN)
@@ -35,7 +39,9 @@ def send_help(message):
 
 @bot.message_handler(func=lambda m: True)
 def send_len(message):
-    words = message.text.replace(' - ', ' ').replace(' \u2013 ', ' ').replace(' \u2014 ', ' ').split()
+    allwords = message.text.replace(' - ', ' ').replace(' \u2013 ', ' ').replace(' \u2014 ', ' ')
+    cl_words = regex.sub(' ', allwords)
+    words = cl_words.split()
     wordCount = len(words)
 
     mod10 = wordCount % 10
