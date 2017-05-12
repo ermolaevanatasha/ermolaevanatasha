@@ -1,12 +1,7 @@
 import flask
 import telebot
 import conf
-# import string
 import re
-
-# regex = re.compile('[%s][^\-]' % re.escape(string.punctuation))
-# # regex = re.compile(r"(\b[-']\b)|[\W_]\-")
-# regex = re.compile(r"[^a-zA-Z0-9-]+")
 
 WEBHOOK_URL_BASE = "https://{}".format(conf.WEBHOOK_HOST)
 WEBHOOK_URL_PATH = "/{}".format(conf.TOKEN)
@@ -42,7 +37,7 @@ def send_help(message):
 @bot.message_handler(func=lambda m: True)
 def send_len(message):
     allwords = message.text.replace(' - ', ' ').replace(' \u2013 ', ' ').replace(' \u2014 ', ' ')
-    cl_words = re.sub(r'[.,!?;:–«»"@#&$]+\ *', ' ', allwords)
+    cl_words = re.sub(r'[.,!?;:–«»"@#&$]+\ *', ' ', allwords) # не убираем различные виды тире (в том числе и дефис), т.к. есть такие слова, как "красно-синий" или "диван-кровать"
     words = cl_words.split()
     wordCount = len(words)
 
