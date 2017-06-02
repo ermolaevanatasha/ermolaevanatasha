@@ -159,7 +159,7 @@ def send_answer(all_umes_ana, all_rand):
         answer = str(ans.inflect(set(an)))
 
         # prin(answer)
-        bot_answer.append(answer[2])
+        bot_answer.append(answer)
 
     bot_ans = ' '.join(bot_answer)
     print(bot_ans)
