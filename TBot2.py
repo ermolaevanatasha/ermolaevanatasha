@@ -86,14 +86,6 @@ def others(all_ana):
     
     # print(d)
 
-def normalforms(all_ana):
-    all_normalforms = []
-
-    for ana in all_ana:
-        all_normalforms.append(ana.normal_form)
-
-    return all_normalforms
-
 umessage = input('Введите ваше сообщение: ')
 
 def parse_umessage(umessage):
@@ -105,77 +97,91 @@ def parse_umessage(umessage):
         
         all_umes_ana.append(umes_ana.tag)
 
-    # print(all_umes_ana)
     return all_umes_ana
 
-def chars(all_umes_ana, all_normalforms):
-    all_rand = []
+def check_base(all_umes_ana, d, all_ana):
+    for uana in all_umes_ana:
+        p_ana = re.findall(r"[\w']+", str(uana))
+        if uana.POS in d:
+            if uana.POS == 'NOUN':
+                if uana.animacy == 'anim':
+                    if uana.gender == 'masc':
+                        answer_word = random.choice(d['NOUN']['anim']['masc'])
+                        make_infl(answer_word, p_ana)
+                    elif uana.gender == 'femn':
+                        answer_word = random.choice(d['NOUN']['anim']['femn'])
+                        make_infl(answer_word, p_ana)
+                    else:
+                        answer_word = random.choice(d['NOUN']['anim']['neut'])
+                        make_infl(answer_word, p_ana)
 
-    for_answ = False # значение логического типа; поможет выбрать слово, удовлетворяющее всем необходимым параметрам
+                else:
+                    if uana.gender == 'masc':
+                        answer_word = random.choice(d['NOUN']['inan']['masc'])
+                        make_infl(answer_word, p_ana)
+                    elif uana.gender == 'femn':
+                        answer_word = random.choice(d['NOUN']['inan']['femn'])
+                        make_infl(answer_word, p_ana)
+                    else:
+                        answer_word = random.choice(d['NOUN']['inan']['neut'])
+                        make_infl(answer_word, p_ana)
 
-    for umes in all_umes_ana:
-        while True:
-            randword = random.choice(all_normalforms) # выбираем случайную лемму из массива всех лемм
-            randword_ana = morph.parse(randword)[0]
-            randword_ana = randword_ana.tag
+            elif uana.POS == 'VERB':
+                if uana.aspect == 'perf':
+                    if uana.transitivity == 'tran':
+                        answer_word = random.choice(d['VERB']['perf']['tran'])
+                        make_infl(answer_word, p_ana)
+                    else:
+                        answer_word = random.choice(d['VERB']['perf']['intr'])
+                        make_infl(answer_word, p_ana)
+                else:
+                    if uana.transitivity == 'tran':
+                        answer_word = random.choice(d['VERB']['impf']['tran'])
+                        make_infl(answer_word, p_ana)
+                    else:
+                        answer_word = random.choice(d['VERB']['impf']['intr'])
+                        make_infl(answer_word, p_ana)
 
-            # print(randword)
+            elif uana.POS == 'NPRO':
+                if uana.person == '1per':
+                    answer_word = random.choice(d['NPRO']['1per'])
+                    make_infl(answer_word, p_ana)
+                elif uana.person == '2per':
+                    answer_word = random.choice(d['NPRO']['2per'])
+                    make_infl(answer_word, p_ana)
+                else:
+                    answer_word = random.choice(d['NPRO']['3per'])
+                    make_infl(answer_word, p_ana)
 
-            if randword_ana.POS == umes.POS:
-                for_answ = True
-                if randword_ana.POS == 'NOUN':
-                    for_answ = (randword_ana.animacy == umes.animacy and randword_ana.gender == umes.gender)
+            else:
+                for ana in all_ana:
+                    answer_word = random.choice(d[ana.tag.POS][ana.normal_form])
+                    make_infl(answer_word, p_ana)
 
-                elif randword_ana.POS == 'NPRO':
-                    for_answ = (randword_ana.person == umes.person)
+def make_infl(answer_word, p_ana):
+    rand_ana = []
+    cl_word = []
+    answer_word_ana = morph.parse(answer_word)[0]
+    rand_ana.append(answer_word_ana)
+    for ans in rand_ana:
+        infl_ana = str(ans.inflect(set(p_ana)))
 
-                elif randword_ana.POS == 'VERB': #or randword_ana.tag.POS == 'GRND':
-                    for_answ = (randword_ana.aspect == umes.aspect and randword_ana.transitivity == umes.transitivity)
+        if 'Parse' in infl_ana:
+            infl_ana = re.findall(r"\w+", infl_ana)
+            cl_word.append(infl_ana[2])
 
-                if for_answ:
-                    all_rand.append(randword)
-                    break
-
-    # print(all_rand)
-    return all_rand
-
-def send_answer(all_umes_ana, all_rand):
-    bot_answer_ana = []
-
-    for ana in all_umes_ana:
-        ana = re.findall(r"[\w']+", str(ana))
-
-        # print(ana)
-
-    for randomword in all_rand:
-        rand_ana = morph.parse(randomword)[0]
-        bot_answer_ana.append(rand_ana)
-
-        print(bot_answer_ana)
-
-    ana_answer = zip(ana, bot_answer_ana)
-    bot_answer = []
-    for an, ans in ana_answer:
-        answer = str(ans.inflect(set(an)))
-
-        # prin(answer)
-        bot_answer.append(answer)
-
-    bot_ans = ' '.join(bot_answer)
-    print(bot_ans)
-
+    s_ans = ''.join(cl_word)
+    print(s_ans)
 
 def main():
     get_words = words()
     get_lemmas = lemmas(get_words)
     get_nouns = nouns(get_lemmas)
     get_pronouns = pronouns(get_lemmas)
-    get_verbs = verbs (get_lemmas)
+    get_verbs = verbs(get_lemmas)
     get_others = others(get_lemmas)
-    get_normalforms = normalforms(get_lemmas)
     get_message = parse_umessage(umessage)
-    get_chars = chars(get_message, get_normalforms)
-    send_answer(get_message, get_chars)
+    check_base(get_message, d, get_lemmas)
   
 if __name__ == '__main__':
     main()
