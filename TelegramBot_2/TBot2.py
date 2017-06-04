@@ -2,28 +2,26 @@ import pymorphy2
 from pymorphy2 import MorphAnalyzer
 import re
 import random
-import string
 
 morph = MorphAnalyzer()
 
 def words():
-    with open('awords.txt', 'r', encoding='utf-8') as f:
-
+    with open('pandas.txt', 'r', encoding='utf-8') as f:
     # для обычного текста:
-    #     lines = f.read()
-    #     cl_lines = re.sub(r'[.,!?;:\u2013\u2014«»"@№#&$%^*()<>+=\/|\\]+\ *', ' ', lines)
-    #     all_words = cl_lines.split()
-
-    # return all_words
-
-    # для списка слов из НКРЯ:
-        lines = f.readlines()
-        all_words = []
-        for line in lines:
-            line = line.replace('\n', '')
-            all_words.append(line.split('\t')[1])
+        lines = f.read()
+        cl_lines = re.sub(r'[.,!?;:\u2013\u2014«»"@№#&$%^*()<>+=\/|\\]+\ *', ' ', lines)
+        all_words = cl_lines.split()
 
     return all_words
+
+    # для списка слов из НКРЯ:
+    #     lines = f.readlines()
+    #     all_words = []
+    #     for line in lines:
+    #         line = line.replace('\n', '')
+    #         all_words.append(line.split('\t')[1])
+
+    # return all_words
 
 def lemmas(all_words):
     all_ana = []
@@ -72,7 +70,7 @@ def pronouns(all_ana):
 
 def verbs(all_ana):
     for ana in all_ana:
-        if ana.tag.POS == 'VERB' or ana.tag.POS == 'INFN' or ana.tag.POS == 'GRND':
+        if ana.tag.POS == 'VERB' or ana.tag.POS == 'INFN': #or ana.tag.POS == 'GRND':
             if ana.tag.POS not in d:
                 d[ana.tag.POS] = {}
                 continue
@@ -106,12 +104,13 @@ def adjs(all_ana):
 
 def others(all_ana):
     for ana in all_ana:
-        if ana.tag.POS != 'NOUN' and ana.tag.POS != 'NPRO' and ana.tag.POS != 'VERB' and ana.tag.POS != 'INFN' and ana.tag.POS != 'GRND' and ana.tag.POS != 'ADJS':
+        if ana.tag.POS != 'NOUN' and ana.tag.POS != 'NPRO' and ana.tag.POS != 'VERB' and ana.tag.POS != 'INFN' and ana.tag.POS != 'ADJS': # ana.tag.POS != 'GRND':
             if ana.tag.POS not in d:
                 d[ana.tag.POS] = []
                 d[ana.tag.POS].append(ana.normal_form)
             else:
                 d[ana.tag.POS].append(ana.normal_form)
+    # print(d)
 
 umessage = input('Введите ваше сообщение: ')
 
@@ -144,7 +143,8 @@ def check_all(all_umes_ana, d, all_ana): # umes_word
                 check_infns(uana, p_ana)
 
             elif uana.POS == 'GRND':
-                check_grnds(uana, p_ana)
+                answer_word = random.choice(d['GRND'])
+                make_infl(answer_word, p_ana)
 
             elif uana.POS == 'NPRO':
                 check_pronouns(uana, p_ana)
@@ -218,23 +218,6 @@ def check_infns(uana, p_ana):
             answer_word = random.choice(d['INFN']['impf']['intr'])
             make_infl(answer_word, p_ana)
 
-def check_grnds(uana, p_ana):
-    if uana.aspect == 'perf':
-        if uana.transitivity == 'tran':
-            answer_word = random.choice(d['GRND']['perf']['tran'])
-            make_infl(answer_word, p_ana)
-        else:
-            answer_word = random.choice(d['GRND']['perf']['intr'])
-            make_infl(answer_word, p_ana)
-            
-    else:
-        if uana.transitivity == 'tran':
-            answer_word = random.choice(d['GRND']['impf']['tran'])
-            make_infl(answer_word, p_ana)
-        else:
-            answer_word = random.choice(d['GRND']['impf']['intr'])
-            make_infl(answer_word, p_ana)
-
 def check_pronouns(uana, p_ana):
     if uana.person == '1per':
         if uana.number == 'sing':
@@ -272,7 +255,7 @@ def check_adjshs(uana, p_ana):
             make_infl(answer_word, p_ana)
 
     else:
-        answer_word = random.choice(d['ADJS']['plur'])
+        answer_word = random.choice(d['ADJS']['plur'][None])
         make_infl(answer_word, p_ana)
 
 def make_infl(answer_word, p_ana):
