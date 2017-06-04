@@ -2,20 +2,23 @@ import pymorphy2
 from pymorphy2 import MorphAnalyzer
 import re
 import random
-import telebot
-import conf
 
 morph = MorphAnalyzer()
 
 def words():
-    with open('all_words.txt', 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-        all_words = []
-        for line in lines:
-            line = line.replace('\n', '')
-            all_words.append(line.split('\t')[1])
-
+    with open('text.txt', 'r', encoding='utf-8') as f:
+        lines = f.read()
+        cl_lines = re.sub(r'[.,!?;:\u2013\u2014«»"@№#&$%^*()<>+=\/|\\]+\ *', ' ', lines)
+        all_words = cl_lines.split()
+        
     return all_words
+
+    # для списка слов из НКРЯ:
+    #     all_words = []
+    #     for line in lines:
+    #         line = line.replace('\n', '')
+    #         # all_words.append(line.split('\t')[1])
+    # return all_words
 
 def lemmas(all_words):
     all_ana = []
@@ -23,6 +26,7 @@ def lemmas(all_words):
     for word in all_words:
         ana = morph.parse(word)
         all_ana.append(ana[0])
+
     return all_ana
 
 d = {}
@@ -56,10 +60,10 @@ def pronouns(all_ana):
                 d[ana.tag.POS][ana.tag.person].append(ana.normal_form)
             else:
                 d[ana.tag.POS][ana.tag.person].append(ana.normal_form)
- 
+
 def verbs(all_ana):
     for ana in all_ana:
-        if ana.tag.POS == 'VERB':
+        if ana.tag.POS == 'VERB' or ana.tag.POS == 'INFN':
             if ana.tag.POS not in d:
                 d[ana.tag.POS] = {}
                 continue
@@ -76,30 +80,30 @@ def verbs(all_ana):
 
 def others(all_ana):
     for ana in all_ana:
-        if ana.tag.POS != 'NOUN' and ana.tag.POS != 'NPRO' and ana.tag.POS != 'VERB':
+        if ana.tag.POS != 'NOUN' and ana.tag.POS != 'NPRO' and ana.tag.POS != 'VERB' and ana.tag.POS != 'INFN':
             if ana.tag.POS not in d:
                 d[ana.tag.POS] = []
                 d[ana.tag.POS].append(ana.normal_form)
-
             else:
                 d[ana.tag.POS].append(ana.normal_form)
-    
-    # print(d)
 
 umessage = input('Введите ваше сообщение: ')
 
 def parse_umessage(umessage):
     all_umes_ana = []
+    umessage = re.sub(r'[^\w\s]', '', umessage)
     umessage = umessage.split()
+    first = umessage[0]
     for mes in umessage:
         umes_ana = morph.parse(mes)
         umes_ana = umes_ana[0]
+        print(umes_ana)
         
         all_umes_ana.append(umes_ana.tag)
 
-    return all_umes_ana
+    return all_umes_ana, first
 
-def check_base(all_umes_ana, d, all_ana):
+def check_all(all_umes_ana, d, all_ana):
     for uana in all_umes_ana:
         p_ana = re.findall(r"[\w']+", str(uana))
         if uana.POS in d:
@@ -126,7 +130,7 @@ def check_base(all_umes_ana, d, all_ana):
                         answer_word = random.choice(d['NOUN']['inan']['neut'])
                         make_infl(answer_word, p_ana)
 
-            elif uana.POS == 'VERB':
+            elif uana.POS == 'VERB' or uana.POS == 'INFN':
                 if uana.aspect == 'perf':
                     if uana.transitivity == 'tran':
                         answer_word = random.choice(d['VERB']['perf']['tran'])
@@ -134,6 +138,7 @@ def check_base(all_umes_ana, d, all_ana):
                     else:
                         answer_word = random.choice(d['VERB']['perf']['intr'])
                         make_infl(answer_word, p_ana)
+                
                 else:
                     if uana.transitivity == 'tran':
                         answer_word = random.choice(d['VERB']['impf']['tran'])
@@ -154,14 +159,14 @@ def check_base(all_umes_ana, d, all_ana):
                     make_infl(answer_word, p_ana)
 
             else:
-                for ana in all_ana:
-                    answer_word = random.choice(d[ana.tag.POS][ana.normal_form])
-                    make_infl(answer_word, p_ana)
+                answer_word = random.choice(d[uana.POS])
+                make_infl(answer_word, p_ana)
 
 def make_infl(answer_word, p_ana):
     rand_ana = []
     cl_word = []
     answer_word_ana = morph.parse(answer_word)[0]
+    print(answer_word_ana)
     rand_ana.append(answer_word_ana)
     for ans in rand_ana:
         infl_ana = str(ans.inflect(set(p_ana)))
@@ -170,7 +175,11 @@ def make_infl(answer_word, p_ana):
             infl_ana = re.findall(r"\w+", infl_ana)
             cl_word.append(infl_ana[2])
 
-    s_ans = ''.join(cl_word)
+        elif infl_ana == 'None':
+            cl_ans = re.findall(r"\w+", str(ans))
+            cl_word.append(ans[2])
+
+    s_ans = ' '.join(cl_word)
     print(s_ans)
 
 def main():
@@ -180,8 +189,13 @@ def main():
     get_pronouns = pronouns(get_lemmas)
     get_verbs = verbs(get_lemmas)
     get_others = others(get_lemmas)
-    get_message = parse_umessage(umessage)
-    check_base(get_message, d, get_lemmas)
+    get_message, get_first = parse_umessage(umessage)
+    check_all(get_message, d, get_lemmas)
+
+    # check_nouns(get_message, d, get_lemmas)
+    # check_verbs(get_message, d, get_lemmas)
+    # check_pronouns(get_message, d, get_lemmas)
+    # check_others(get_message, d, get_lemmas)
   
 if __name__ == '__main__':
     main()
